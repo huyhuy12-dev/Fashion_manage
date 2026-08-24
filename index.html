@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Fashion Manager - Quản lý ảnh sản phẩm</title>
+    <style>
+        * { box-sizing: border-box; }
+        :root {
+            --primary: #111;
+            --accent: #bfa15f;
+            --bg: #f4f6f8;
+            --card: #fff;
+            --text: #222;
+            --radius: 10px;
+            --shadow: 0 6px 18px rgba(0,0,0,0.06);
+        }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+        header { background: var(--primary); color: #fff; padding: 18px; text-align: center; border-bottom: 4px solid var(--accent); text-transform: uppercase; letter-spacing: 2px; position: sticky; top:0; z-index:100; }
+        .container { max-width: 1400px; margin: 25px auto; padding: 0 20px; }
+        .panel { background: var(--card); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); border: 1px solid #e2e8f0; margin-bottom: 25px; }
+        .panel-title { font-size: 15px; font-weight: bold; margin-bottom: 16px; color: var(--primary); border-left: 4px solid var(--accent); padding-left: 12px; text-transform: uppercase; }
+        .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 14px; }
+        label { font-size: 11px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #4a5568; }
+        input, select, textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; width: 100%; }
+        textarea { font-family: monospace; height: 110px; resize: vertical; background: #1e293b; color: #38bdf8; }
+        .btn { color: white; border: none; padding: 11px; font-size: 13px; font-weight: bold; text-transform: uppercase; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 4px; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); }
+        .btn-primary:hover { background: var(--accent); }
+        .btn-green { background: #16a34a; }
+        .btn-green:hover { background: #15803d; }
+        .btn-danger { background: #dc2626; }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-orange { background: #ea580c; }
+        .btn-orange:hover { background: #c2410c; }
+        .btn-blue { background: #2563eb; }
+        .btn-blue:hover { background: #1d4ed8; }
+        .btn-sm { padding: 6px 14px; width: auto; font-size: 11px; display: inline-block; }
+        .search-box { width: 100%; padding: 12px; font-size: 14px; border: 2px solid var(--accent); border-radius: 6px; margin-bottom: 0; }
+        .status-bar { background: #e2e8f0; padding: 10px 18px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 14px; }
+        .group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 28px; }
+        .group-card { background: var(--card); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); border: 1px solid #e2e8f0; }
+        .group-header { padding: 14px 18px; background: #f8fafc; border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .group-code { font-size: 20px; font-weight: 800; color: var(--primary); }
+        .group-type { background: rgba(191,161,95,0.18); color: #8a6d2d; padding: 2px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .group-count { font-size: 13px; color: #4a5568; }
+        .group-body { padding: 14px; }
+        .image-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; max-height: 500px; overflow-y: auto; }
+        .image-grid .img-wrap { position: relative; aspect-ratio: 1/1; background: #f1f5f9; border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0; cursor: pointer; transition: transform 0.15s; }
+        .image-grid .img-wrap:hover { transform: scale(1.02); border-color: var(--accent); }
+        .image-grid .img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+        .img-del { position: absolute; top: 2px; right: 2px; background: rgba(220,38,38,0.85); color: #fff; border: none; border-radius: 30px; width: 22px; height: 22px; font-size: 12px; cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center; z-index: 2; }
+        .img-del:hover { background: #b91c1c; }
+        .group-actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .empty-msg { grid-column: 1/-1; color: #718096; padding: 40px; text-align: center; font-size: 16px; }
+        .file-input-hidden { display: none; }
+        .preview-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin: 2px; border: 1px solid #cbd5e1; }
+        #filterStatus { font-size: 13px; color: #4a5568; background: #f1f5f9; padding: 8px 14px; border-radius: 6px; display: none; margin-top: 10px; }
+        .save-indicator { position: fixed; bottom: 20px; right: 20px; background: #16a34a; color: white; padding: 8px 18px; border-radius: 30px; font-size: 13px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 99999; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
+        .save-indicator.show { opacity: 1; }
+
+        /* AUTH MODAL */
+        .auth-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+        .auth-overlay.hidden { display: none; }
+        .auth-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 40px 35px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        .auth-box h2 { margin-top: 0; text-align: center; color: var(--primary); font-weight: 800; }
+        .auth-box .sub { text-align: center; color: #64748b; font-size: 14px; margin-bottom: 20px; }
+        .auth-box .form-group { margin-bottom: 16px; }
+        .auth-box .btn { margin-top: 8px; }
+        .auth-box .switch { text-align: center; font-size: 13px; color: #64748b; margin-top: 14px; }
+        .auth-box .switch a { color: var(--accent); cursor: pointer; font-weight: bold; text-decoration: none; }
+        .auth-box .switch a:hover { text-decoration: underline; }
+        .auth-box .close-auth {
+            position: absolute;
+            top: 12px;
+            right: 18px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #94a3b8;
+            background: none;
+            border: none;
+        }
+        .auth-box .close-auth:hover { color: #dc2626; }
+        .auth-box .email-login-btn {
+            background: #ea4335;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            width: 100%;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 6px;
+        }
+        .auth-box .email-login-btn:hover { background: #d33426; }
+        .auth-box .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 16px 0;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .auth-box .divider hr { flex: 1; border: none; border-top: 1px solid #e2e8f0; }
+
+        .user-info {
+            background: var(--accent);
+            color: white;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .user-info .logout-btn {
+            background: rgba(0,0,0,0.2);
+            border: none;
+            color: white;
+            border-radius: 20px;
+            padding: 2px 12px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .user-info .logout-btn:hover { background: rgba(0,0,0,0.4); }
+
+        /* ADMIN PANEL */
+        .admin-panel { display: none; }
+        .admin-panel.active { display: block; }
+        .user-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .user-table th, .user-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        .user-table th { background: #f1f5f9; font-weight: bold; text-transform: uppercase; font-size: 11px; color: #4a5568; }
+        .user-table tr:hover { background: #f8fafc; }
+        .user-table .btn-sm { padding: 4px 12px; font-size: 11px; width: auto; }
+        .user-badge-admin { background: #bfa15f; color: white; padding: 2px 10px; border-radius: 20px; font-size: 11px; }
+        .user-badge-user { background: #64748b; color: white; padding: 2px 10px; border-radius: 20px; font-size: 11px; }
+        .view-user-data-btn { background: #2563eb; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .view-user-data-btn:hover { background: #1d4ed8; }
+
+        /* LIGHTBOX */
+        .lightbox-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+            flex-direction: column;
+        }
+        .lightbox-overlay.active { display: flex; }
+        .lightbox-content {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 94vw;
+            max-height: 94vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            border: 1px solid #334155;
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 6px;
+            right: 12px;
+            background: rgba(220,38,38,0.8);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            border-radius: 30px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            transition: 0.2s;
+        }
+        .lightbox-close:hover { background: #b91c1c; transform: scale(1.1); }
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #475569;
+            color: white;
+            font-size: 28px;
+            width: 44px;
+            height: 44px;
+            border-radius: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 15;
+            transition: 0.2s;
+        }
+        .lightbox-nav:hover { background: var(--accent); color: #111; }
+        .lightbox-nav.prev { left: 6px; }
+        .lightbox-nav.next { right: 6px; }
+        .lightbox-image-container {
+            width: 100%;
+            height: 72vh;
+            overflow: hidden;
+            position: relative;
+            cursor: grab;
+            background: #0f172a;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none;
+        }
+        .lightbox-image-container:active { cursor: grabbing; }
+        .lightbox-image-container img {
+            max-width: none;
+            max-height: none;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            transition: none;
+            transform-origin: center center;
+            user-select: none;
+            -webkit-user-drag: none;
+            pointer-events: none;
+            will-change: transform;
+        }
+        .lightbox-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px 0 2px 0;
+            background: #1e293b;
+            border-radius: 0 0 8px 8px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .lightbox-toolbar button {
+            background: #334155;
+            border: none;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: 0.2s;
+            min-width: 36px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .lightbox-toolbar button:hover { background: var(--accent); color: #111; }
+        .lightbox-toolbar #zoomLevel {
+            color: #94a3b8;
+            font-size: 13px;
+            min-width: 50px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .lightbox-toolbar #zoomReset { font-size: 12px; min-width: 60px; }
+        .lightbox-toolbar #zoomFit { font-size: 12px; min-width: 60px; }
+        .lightbox-info {
+            width: 100%;
+            color: #e2e8f0;
+            padding: 6px 0 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            font-size: 13px;
+        }
+        .lightbox-info .name { color: #94a3b8; word-break: break-all; }
+        .lightbox-info .size { color: #64748b; }
+        .lightbox-actions { display: flex; gap: 10px; align-items: center; }
+        .lightbox-actions button {
+            background: #334155;
+            border: none;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .lightbox-actions button:hover { background: var(--accent); color: #111; }
+        @media (max-width: 700px) {
+            .grid-2col { grid-template-columns: 1fr; }
+            .group-grid { grid-template-columns: 1fr; }
+            .lightbox-image-container { height: 52vh; }
+            .lightbox-nav { width: 32px; height: 32px; font-size: 18px; }
+            .lightbox-toolbar button { font-size: 12px; padding: 2px 8px; height: 28px; }
+            .lightbox-content { padding: 12px; max-width: 98vw; max-height: 98vh; }
+            .auth-box { padding: 25px 20px; }
+            .user-table { font-size: 11px; }
+            .user-table th, .user-table td { padding: 6px 8px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== SAVE INDICATOR ===== -->
+<div class="save-indicator" id="saveIndicator">✅ Đã lưu</div>
+
+<!-- ===== AUTH MODAL ===== -->
+<div class="auth-overlay" id="authModal">
+    <div class="auth-box">
+        <button class="close-auth" id="closeAuthBtn">✕</button>
+        <h2 id="authTitle">👋 Đăng nhập</h2>
+        <div class="sub" id="authSub">Đăng nhập để quản lý kho ảnh của bạn</div>
+        <div id="authForm">
+            <div class="form-group">
+                <label>Tên đăng nhập</label>
+                <input type="text" id="authUsername" placeholder="Nhập tên đăng nhập...">
+            </div>
+            <div class="form-group">
+                <label>Mật khẩu</label>
+                <input type="password" id="authPassword" placeholder="Nhập mật khẩu...">
+            </div>
+            <button class="btn btn-primary" id="authSubmitBtn">Đăng nhập</button>
+            <div class="divider"><hr> HOẶC <hr></div>
+            <button class="email-login-btn" id="emailLoginBtn">📧 Đăng nhập bằng Email (Google)</button>
+            <div class="switch" id="authSwitch">
+                Chưa có tài khoản? <a id="authToggleLink" style="color:#bfa15f; cursor:pointer; font-weight:bold;">Đăng ký ngay</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<header>
+    <h1>👗 Fashion Manager</h1>
+    <div style="margin-top:8px; display:flex; justify-content:center; align-items:center; gap:12px; flex-wrap:wrap;">
+        <span id="userDisplay" style="color:#94a3b8; font-size:14px; text-transform:none;">🔒 Chưa đăng nhập</span>
+        <button class="btn btn-sm" id="adminPanelBtn" style="width:auto; background:#6b7280; color:white; padding:6px 20px; display:none;">⚙️ Quản trị</button>
+        <button class="btn btn-sm" id="authOpenBtn" style="width:auto; background:var(--accent); color:#111; padding:6px 20px;">Đăng nhập</button>
+    </div>
+</header>
+
+<div class="container" id="mainContent" style="display:none;">
+    <!-- ===== ADMIN PANEL ===== -->
+    <div class="panel admin-panel" id="adminPanel">
+        <div class="panel-title">⚙️ Quản trị tài khoản</div>
+        <div style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <span style="font-size:14px; color:#4a5568;">Tổng số người dùng: <strong id="totalUsers">0</strong></span>
+            <button class="btn btn-danger btn-sm" id="refreshAdminBtn" style="width:auto; padding:6px 20px;">🔄 Làm mới</button>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="user-table" id="userTable">
+                <thead><tr><th>Tên đăng nhập</th><th>Loại</th><th>Ngày tạo</th><th>Số nhóm</th><th>Thao tác</th></tr></thead>
+                <tbody id="userTableBody"><tr><td colspan="5" style="text-align:center; color:#94a3b8;">Chưa có dữ liệu</td></tr></tbody>
+            </table>
+        </div>
+        <div id="adminUserDataContainer" style="margin-top:20px; display:none;">
+            <div class="panel-title" style="margin-bottom:10px;">📂 Dữ liệu của user: <span id="adminViewingUser" style="color:var(--accent);"></span></div>
+            <div id="adminUserDataGrid" class="group-grid"></div>
+            <button class="btn btn-sm" id="closeAdminUserDataBtn" style="width:auto; background:#6b7280; margin-top:10px;">✖ Đóng dữ liệu</button>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <span id="totalGroups">📦 0 nhóm</span>
+        <span id="totalImages">🖼 0 ảnh</span>
+        <span id="storageSize">💾 0 MB</span>
+        <button class="btn btn-danger btn-sm" id="clearAllBtn">🗑 Xóa tất cả</button>
+    </div>
+
+    <div class="panel">
+        <div class="panel-title">➕ Thêm nhóm sản phẩm</div>
+        <div class="grid-2col">
+            <div>
+                <div class="form-group">
+                    <label>Phân loại:</label>
+                    <select id="folderSelect">
+                        <option value="Váy">Váy (V)</option>
+                        <option value="Áo">Áo (A)</option>
+                        <option value="Set váy">Set váy (SV)</option>
+                        <option value="Set đồ">Set đồ (S)</option>
+                        <option value="Chân váy">Chân váy (CV)</option>
+                        <option value="Sơ mi">Sơ mi (SM)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Mã sản phẩm (VD: 26101):</label>
+                    <input type="text" id="productCodeInput" placeholder="Nhập số mã...">
+                </div>
+                <div class="form-group">
+                    <label>Danh sách tên file (cách bằng dấu phẩy hoặc xuống dòng):</label>
+                    <textarea id="imageListInput" placeholder="VD: vay1.png, vay2.jpg"></textarea>
+                </div>
+                <button class="btn btn-primary" id="addImagesBtn">➕ Thêm ảnh (tên file)</button>
+            </div>
+            <div>
+                <div class="form-group" style="border:2px dashed #cbd5e1; border-radius:8px; padding:20px; text-align:center; min-height:170px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <div style="font-size:40px;">📂</div>
+                    <div style="font-weight:bold;">Chọn ảnh từ máy tính</div>
+                    <div style="font-size:13px; color:#4a5568; margin:6px 0;">Hỗ trợ chọn nhiều ảnh (Ctrl+Click)</div>
+                    <button class="btn btn-blue" id="uploadBtn" style="width:auto; padding:10px 30px;">📤 Chọn ảnh</button>
+                    <input type="file" id="fileInput" class="file-input-hidden" multiple accept="image/*">
+                    <div id="previewContainer" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; justify-content:center;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-title">📋 Dữ liệu JSON (sao lưu & khôi phục)</div>
+        <div class="grid-2col">
+            <div>
+                <textarea id="jsonTextarea" placeholder="Dán JSON vào đây để khôi phục dữ liệu."></textarea>
+                <button class="btn btn-green" id="loadJsonBtn" style="margin-top:6px;">📥 Khôi phục từ JSON</button>
+            </div>
+            <div>
+                <button class="btn btn-primary" id="exportJsonBtn">📋 Copy JSON</button>
+                <button class="btn btn-orange" id="exportJsonFileBtn" style="margin-top:6px;">💾 Tải JSON</button>
+                <button class="btn btn-danger" id="clearStorageBtn" style="margin-top:6px; background:#6b7280;">🧹 Dọn cache ảnh</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-title">🔍 Tìm kiếm và lọc theo thời gian</div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+            <div style="flex:2; min-width:180px;">
+                <label style="font-size:11px; font-weight:bold; text-transform:uppercase; color:#4a5568; display:block; margin-bottom:4px;">Từ khóa (mã sản phẩm)</label>
+                <input type="text" id="searchBox" class="search-box" placeholder="Gõ mã sản phẩm (VD: V26101, 26101, sv...)" style="margin-bottom:0;">
+            </div>
+            <div style="flex:1; min-width:140px;">
+                <label style="font-size:11px; font-weight:bold; text-transform:uppercase; color:#4a5568; display:block; margin-bottom:4px;">Từ ngày</label>
+                <input type="date" id="dateFrom" style="padding:10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; width:100%;">
+            </div>
+            <div style="flex:1; min-width:140px;">
+                <label style="font-size:11px; font-weight:bold; text-transform:uppercase; color:#4a5568; display:block; margin-bottom:4px;">Đến ngày</label>
+                <input type="date" id="dateTo" style="padding:10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; width:100%;">
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="btn btn-blue" id="applyDateFilterBtn" style="width:auto; padding:10px 20px; margin-top:0;">📅 Lọc</button>
+                <button class="btn btn-danger" id="clearDateFilterBtn" style="width:auto; padding:10px 20px; margin-top:0; background:#6b7280;">✖ Xóa lọc</button>
+            </div>
+        </div>
+        <div id="filterStatus">⏱ Đang lọc theo thời gian: <span id="filterDateRange"></span></div>
+    </div>
+
+    <div class="group-grid" id="groupGrid"></div>
+</div>
+
+<!-- ===== LIGHTBOX ===== -->
+<div class="lightbox-overlay" id="lightbox">
+    <div class="lightbox-content" id="lightboxContent">
+        <button class="lightbox-close" id="lightboxClose">✕</button>
+        <button class="lightbox-nav prev" id="lightboxPrev">‹</button>
+        <button class="lightbox-nav next" id="lightboxNext">›</button>
+        <div class="lightbox-image-container" id="lightboxImageContainer">
+            <img id="lightboxImg" src="" alt="Xem ảnh" draggable="false">
+        </div>
+        <div class="lightbox-toolbar">
+            <button id="zoomReset" title="Đặt lại zoom">⟲ 100%</button>
+            <button id="zoomOut" title="Thu nhỏ">➖</button>
+            <span id="zoomLevel">100%</span>
+            <button id="zoomIn" title="Phóng to">➕</button>
+            <button id="zoomFit" title="Vừa khung">⛶ Vừa</button>
+        </div>
+        <div class="lightbox-info">
+            <span class="name" id="lightboxName">Tên ảnh</span>
+            <div class="lightbox-actions">
+                <span class="size" id="lightboxSize">0 KB</span>
+                <button id="lightboxDownload">⬇ Tải ảnh</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// =====================================================================
+// CẤU TRÚC DỮ LIỆU TẬP TRUNG
+// =====================================================================
+const APP_KEY = 'fashion_app_data';
+const ADMIN_USERNAME = 'admin';
+const ADMIN_PASSWORD = 'admin123';
+
+let appData = null;
+let groups = [];
+let currentUser = null;
+let isLoginMode = true;
+let isAdmin = false;
+let dateFilterFrom = null;
+let dateFilterTo = null;
+let saveTimeout = null;
+let isSaving = false;
+
+// DOM refs
+const $ = id => document.getElementById(id);
+const folderSelect = $('folderSelect');
+const productCodeInput = $('productCodeInput');
+const imageListInput = $('imageListInput');
+const addImagesBtn = $('addImagesBtn');
+const uploadBtn = $('uploadBtn');
+const fileInput = $('fileInput');
+const previewContainer = $('previewContainer');
+const groupGrid = $('groupGrid');
+const searchBox = $('searchBox');
+const dateFrom = $('dateFrom');
+const dateTo = $('dateTo');
+const applyDateFilterBtn = $('applyDateFilterBtn');
+const clearDateFilterBtn = $('clearDateFilterBtn');
+const filterStatus = $('filterStatus');
+const filterDateRange = $('filterDateRange');
+const jsonTextarea = $('jsonTextarea');
+const loadJsonBtn = $('loadJsonBtn');
+const exportJsonBtn = $('exportJsonBtn');
+const exportJsonFileBtn = $('exportJsonFileBtn');
+const clearAllBtn = $('clearAllBtn');
+const clearStorageBtn = $('clearStorageBtn');
+const totalGroupsSpan = $('totalGroups');
+const totalImagesSpan = $('totalImages');
+const storageSizeSpan = $('storageSize');
+const saveIndicator = $('saveIndicator');
+
+// Auth DOM
+const authModal = $('authModal');
+const authTitle = $('authTitle');
+const authSub = $('authSub');
+const authUsername = $('authUsername');
+const authPassword = $('authPassword');
+const authSubmitBtn = $('authSubmitBtn');
+const authToggleLink = $('authToggleLink');
+const authSwitch = $('authSwitch');
+const authOpenBtn = $('authOpenBtn');
+const closeAuthBtn = $('closeAuthBtn');
+const emailLoginBtn = $('emailLoginBtn');
+const userDisplay = $('userDisplay');
+const mainContent = $('mainContent');
+const adminPanelBtn = $('adminPanelBtn');
+const adminPanel = $('adminPanel');
+
+// Lightbox DOM
+const lightbox = $('lightbox');
+const lightboxImg = $('lightboxImg');
+const lightboxName = $('lightboxName');
+const lightboxSize = $('lightboxSize');
+const lightboxDownload = $('lightboxDownload');
+const lightboxClose = $('lightboxClose');
+const lightboxPrev = $('lightboxPrev');
+const lightboxNext = $('lightboxNext');
+const lightboxContainer = $('lightboxImageContainer');
+const zoomInBtn = $('zoomIn');
+const zoomOutBtn = $('zoomOut');
+const zoomResetBtn = $('zoomReset');
+const zoomFitBtn = $('zoomFit');
+const zoomLevelSpan = $('zoomLevel');
+
+let currentLightboxGroupIdx = null;
+let currentLightboxImageIdx = null;
+
+// =====================================================================
+// HÀM LƯU TRỮ BỀN VỮNG
+// =====================================================================
+function loadAppData() {
+    try {
+        const raw = localStorage.getItem(APP_KEY);
+        if (raw) {
+            appData = JSON.parse(raw);
+            if (!appData.users) appData.users = {};
+            if (!appData.userData) appData.userData = {};
+            return true;
+        }
+    } catch(e) { console.warn('Lỗi đọc dữ liệu:', e); }
+    return false;
+}
+
+function saveAppData(showIndicator = true) {
+    if (isSaving) return;
+    isSaving = true;
+    try {
+        localStorage.setItem(APP_KEY, JSON.stringify(appData));
+        if (showIndicator) {
+            saveIndicator.classList.add('show');
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => saveIndicator.classList.remove('show'), 1500);
+        }
+    } catch(e) {
+        console.warn('Lỗi lưu dữ liệu:', e);
+        alert('⚠ Lỗi lưu dữ liệu! Vui lòng kiểm tra bộ nhớ trình duyệt.');
+    }
+    isSaving = false;
+}
+
+function debounceSave() {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => saveAppData(true), 500);
+}
+
+// =====================================================================
+// HÀM XỬ LÝ DỮ LIỆU
+// =====================================================================
+function initAppData() {
+    if (!loadAppData()) {
+        appData = {
+            users: {},
+            userData: {},
+            currentUser: null
+        };
+        // Tạo admin mặc định
+        appData.users[ADMIN_USERNAME] = {
+            password: ADMIN_PASSWORD,
+            createdAt: Date.now(),
+            isAdmin: true
+        };
+        appData.userData[ADMIN_USERNAME] = [
+            { productCode: 'V26101', type: 'Váy', images: [{ name: 'vay1.png', data: null }, { name: 'vay2.jpg', data: null }], createdAt: Date.now() - 3600000 },
+            { productCode: 'A12345', type: 'Áo', images: [{ name: 'ao1.jpg', data: null }], createdAt: Date.now() - 7200000 }
+        ];
+        saveAppData(true);
+    }
+    // Đồng bộ groups với dữ liệu user hiện tại
+    syncCurrentUserData();
+}
+
+function getUsers() {
+    return appData.users || {};
+}
+
+function getUserData(username) {
+    return appData.userData[username] || [];
+}
+
+function setUserData(username, data) {
+    appData.userData[username] = data;
+    debounceSave();
+}
+
+function getCurrentUsername() {
+    return appData.currentUser || null;
+}
+
+function setCurrentUsername(username) {
+    appData.currentUser = username;
+    debounceSave();
+}
+
+function syncCurrentUserData() {
+    const username = getCurrentUsername();
+    if (username && appData.userData[username]) {
+        groups = appData.userData[username];
+    } else {
+        groups = [];
+    }
+}
+
+function saveCurrentUserData() {
+    const username = getCurrentUsername();
+    if (username) {
+        appData.userData[username] = groups;
+        debounceSave();
+    }
+}
+
+// =====================================================================
+// HÀM XÁC THỰC
+// =====================================================================
+function registerUser(username, password) {
+    const users = getUsers();
+    if (users[username]) return false;
+    users[username] = {
+        password: password,
+        createdAt: Date.now()
+    };
+    appData.userData[username] = [];
+    saveAppData(true);
+    return true;
+}
+
+function loginUser(username, password) {
+    const users = getUsers();
+    if (users[username] && users[username].password === password) {
+        setCurrentUsername(username);
+        return true;
+    }
+    return false;
+}
+
+function logoutUser() {
+    setCurrentUsername(null);
+    currentUser = null;
+    isAdmin = false;
+    groups = [];
+}
+
+function getCurrentUser() {
+    const username = getCurrentUsername();
+    if (!username) return null;
+    const users = getUsers();
+    if (users[username]) {
+        return { username, ...users[username] };
+    }
+    return null;
+}
+
+function isAdminUser(username) {
+    return username === ADMIN_USERNAME;
+}
+
+function deleteUser(username) {
+    if (username === ADMIN_USERNAME) {
+        alert('⚠ Không thể xóa tài khoản admin!');
+        return false;
+    }
+    const users = getUsers();
+    if (users[username]) {
+        delete users[username];
+        delete appData.userData[username];
+        if (appData.currentUser === username) {
+            appData.currentUser = null;
+        }
+        saveAppData(true);
+        return true;
+    }
+    return false;
+}
+
+function getAllUsers() {
+    const users = getUsers();
+    return Object.keys(users).map(username => ({
+        username,
+        ...users[username]
+    }));
+}
+
+// =====================================================================
+// AUTH UI
+// =====================================================================
+function updateAuthUI() {
+    if (isLoginMode) {
+        authTitle.textContent = '👋 Đăng nhập';
+        authSub.textContent = 'Đăng nhập để quản lý kho ảnh của bạn';
+        authSubmitBtn.textContent = 'Đăng nhập';
+        authSwitch.innerHTML = 'Chưa có tài khoản? <a id="authToggleLink" style="color:#bfa15f; cursor:pointer; font-weight:bold;">Đăng ký ngay</a>';
+    } else {
+        authTitle.textContent = '📝 Đăng ký';
+        authSub.textContent = 'Tạo tài khoản mới để bắt đầu';
+        authSubmitBtn.textContent = 'Đăng ký';
+        authSwitch.innerHTML = 'Đã có tài khoản? <a id="authToggleLink" style="color:#bfa15f; cursor:pointer; font-weight:bold;">Đăng nhập</a>';
+    }
+    const link = document.querySelector('#authToggleLink');
+    if (link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            isLoginMode = !isLoginMode;
+            authUsername.value = '';
+            authPassword.value = '';
+            updateAuthUI();
+        });
+    }
+}
+
+function showAuthModal() {
+    authModal.classList.remove('hidden');
+    authUsername.focus();
+}
+
+function hideAuthModal() {
+    authModal.classList.add('hidden');
+}
+
+function handleAuthSubmit() {
+    const username = authUsername.value.trim();
+    const password = authPassword.value.trim();
+    if (!username || !password) {
+        alert('⚠ Vui lòng nhập đầy đủ tên và mật khẩu!');
+        return;
+    }
+    if (isLoginMode) {
+        if (loginUser(username, password)) {
+            alert('✅ Đăng nhập thành công!');
+            hideAuthModal();
+            loadUserSession();
+        } else {
+            alert('❌ Sai tên hoặc mật khẩu!');
+        }
+    } else {
+        if (username === ADMIN_USERNAME) {
+            alert('❌ Không thể đăng ký tên admin!');
+            return;
+        }
+        if (registerUser(username, password)) {
+            alert('✅ Đăng ký thành công! Vui lòng đăng nhập.');
+            isLoginMode = true;
+            updateAuthUI();
+            authUsername.value = '';
+            authPassword.value = '';
+            authUsername.focus();
+        } else {
+            alert('❌ Tên đăng nhập đã tồn tại!');
+        }
+    }
+}
+
+function emailLogin() {
+    const email = prompt('📧 Nhập email của bạn để đăng nhập:');
+    if (!email) return;
+    if (!email.includes('@') || !email.includes('.')) {
+        alert('⚠ Email không hợp lệ!');
+        return;
+    }
+    const username = 'user_' + email.replace(/[^a-zA-Z0-9]/g, '_');
+    const password = 'oauth_' + Date.now();
+    const users = getUsers();
+    if (!users[username]) {
+        users[username] = { password, createdAt: Date.now(), email: email };
+        appData.userData[username] = [];
+        saveAppData(true);
+    } else {
+        users[username].password = password;
+        saveAppData(true);
+    }
+    if (loginUser(username, password)) {
+        alert('✅ Đăng nhập email thành công!');
+        hideAuthModal();
+        loadUserSession();
+    } else {
+        alert('❌ Lỗi đăng nhập email!');
+    }
+}
+
+function loadUserSession() {
+    const user = getCurrentUser();
+    if (user) {
+        currentUser = user;
+        isAdmin = isAdminUser(user.username);
+        syncCurrentUserData();
+        
+        userDisplay.innerHTML = `👤 ${user.username} ${isAdmin ? '⭐' : ''} <button class="logout-btn" id="logoutBtn" style="background:rgba(0,0,0,0.2);border:none;color:white;border-radius:20px;padding:2px 12px;cursor:pointer;font-size:11px;font-weight:bold;">Đăng xuất</button>`;
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            logoutUser();
+            userDisplay.innerHTML = '🔒 Chưa đăng nhập';
+            mainContent.style.display = 'none';
+            adminPanel.classList.remove('active');
+            authOpenBtn.textContent = 'Đăng nhập';
+            authOpenBtn.style.background = 'var(--accent)';
+            authOpenBtn.style.color = '#111';
+            authOpenBtn.style.border = 'none';
+            location.reload();
+        });
+        mainContent.style.display = 'block';
+        authOpenBtn.textContent = isAdmin ? '👑 Admin' : '👤 ' + user.username;
+        authOpenBtn.style.background = isAdmin ? '#bfa15f' : 'transparent';
+        authOpenBtn.style.color = isAdmin ? '#111' : '#bfa15f';
+        authOpenBtn.style.border = isAdmin ? '2px solid #bfa15f' : '1px solid #bfa15f';
+        
+        if (isAdmin) {
+            adminPanelBtn.style.display = 'inline-block';
+            renderAdminPanel();
+        } else {
+            adminPanelBtn.style.display = 'none';
+            adminPanel.classList.remove('active');
+        }
+        updateJsonTextarea();
+        renderGroups('');
+    } else {
+        userDisplay.innerHTML = '🔒 Chưa đăng nhập';
+        mainContent.style.display = 'none';
+        adminPanel.classList.remove('active');
+        adminPanelBtn.style.display = 'none';
+        authOpenBtn.textContent = 'Đăng nhập';
+        authOpenBtn.style.background = 'var(--accent)';
+        authOpenBtn.style.color = '#111';
+        authOpenBtn.style.border = 'none';
+    }
+}
+
+// =====================================================================
+// ADMIN FUNCTIONS
+// =====================================================================
+let adminViewingUser = null;
+
+function renderAdminPanel() {
+    if (!isAdmin) {
+        adminPanel.classList.remove('active');
+        adminPanelBtn.style.display = 'none';
+        return;
+    }
+    adminPanelBtn.style.display = 'inline-block';
+    const userList = getAllUsers();
+    const tbody = document.getElementById('userTableBody');
+    document.getElementById('totalUsers').textContent = userList.length;
+    
+    if (userList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#94a3b8;">Chưa có người dùng nào</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    userList.forEach(user => {
+        const isAdminUser = isAdminUser(user.username);
+        const userData = getUserData(user.username);
+        const groupCount = userData.length;
+        const createdDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'N/A';
+        html += `
+            <tr>
+                <td><strong>${user.username}</strong> ${isAdminUser ? '<span class="user-badge-admin">Admin</span>' : ''}</td>
+                <td>${isAdminUser ? '<span class="user-badge-admin">Quản trị</span>' : '<span class="user-badge-user">Người dùng</span>'}</td>
+                <td>${createdDate}</td>
+                <td>${groupCount}</td>
+                <td>
+                    ${!isAdminUser ? `
+                        <button class="view-user-data-btn" data-username="${user.username}">📂 Xem dữ liệu</button>
+                        <button class="btn btn-danger btn-sm delete-user-btn" data-username="${user.username}" style="width:auto; padding:4px 12px; font-size:11px;">🗑 Xóa</button>
+                    ` : '<span style="color:#94a3b8; font-size:12px;">Không thể xóa</span>'}
+                </td>
+            </tr>
+        `;
+    });
+    tbody.innerHTML = html;
+    
+    document.querySelectorAll('.view-user-data-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            viewUserData(this.getAttribute('data-username'));
+        });
+    });
+    document.querySelectorAll('.delete-user-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const username = this.getAttribute('data-username');
+            if (confirm(`⚠ Xóa tài khoản "${username}" và toàn bộ dữ liệu?`)) {
+                if (deleteUser(username)) {
+                    alert(`✅ Đã xóa "${username}"`);
+                    renderAdminPanel();
+                    if (username === currentUser?.username) {
+                        logoutUser();
+                        location.reload();
+                    }
+                } else {
+                    alert('❌ Không thể xóa!');
+                }
+            }
+        });
+    });
+}
+
+function viewUserData(username) {
+    adminViewingUser = username;
+    const data = getUserData(username);
+    const container = document.getElementById('adminUserDataContainer');
+    const grid = document.getElementById('adminUserDataGrid');
+    document.getElementById('adminViewingUser').textContent = username;
+    grid.innerHTML = '';
+    if (data.length === 0) {
+        grid.innerHTML = '<div class="empty-msg">📭 User này chưa có dữ liệu</div>';
+    } else {
+        data.forEach(group => {
+            const card = document.createElement('div');
+            card.className = 'group-card';
+            const dateStr = new Date(group.createdAt || Date.now()).toLocaleDateString('vi-VN');
+            let imagesHtml = '<div style="color:#94a3b8; padding:8px 0;">Không có ảnh</div>';
+            if (group.images && group.images.length > 0) {
+                imagesHtml = '<div class="image-grid">';
+                group.images.forEach(img => {
+                    const src = img.data || `./images/${img.name}`;
+                    imagesHtml += `
+                        <div class="img-wrap">
+                            <img src="${src}" alt="${group.productCode}" loading="lazy" onerror="this.src='https://placehold.co/200x200/1e293b/bfa15f?text=❌'">
+                        </div>
+                    `;
+                });
+                imagesHtml += '</div>';
+            }
+            card.innerHTML = `
+                <div class="group-header">
+                    <span class="group-code">${group.productCode}</span>
+                    <span class="group-type">${group.type || 'Không phân loại'}</span>
+                    <span class="group-count">${group.images ? group.images.length : 0} ảnh</span>
+                </div>
+                <div class="group-body">${imagesHtml}</div>
+                <div style="padding:0 14px 14px; font-size:11px; color:#94a3b8;">📅 ${dateStr}</div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+    container.style.display = 'block';
+    adminPanel.scrollIntoView({ behavior: 'smooth' });
+}
+
+function closeAdminUserData() {
+    document.getElementById('adminUserDataContainer').style.display = 'none';
+    adminViewingUser = null;
+}
+
+// =====================================================================
+// JSON UTILITY
+// =====================================================================
+function updateJsonTextarea() {
+    const data = {
+        users: getUsers(),
+        userData: appData.userData
+    };
+    jsonTextarea.value = JSON.stringify(data, null, 2);
+}
+
+function migrateLegacyData(data) {
+    if (!data) return null;
+    // Nếu là dữ liệu cũ (mảng groups)
+    if (Array.isArray(data)) {
+        return {
+            users: { admin: { password: 'admin123', createdAt: Date.now(), isAdmin: true } },
+            userData: { admin: data }
+        };
+    }
+    return data;
+}
+
+// =====================================================================
+// RENDER GALLERY
+// =====================================================================
+function renderGroups(filterText = '') {
+    const keyword = filterText.trim().toLowerCase();
+    let filtered = groups;
+    if (keyword) filtered = filtered.filter(g => g.productCode.toLowerCase().includes(keyword));
+    if (dateFilterFrom || dateFilterTo) {
+        const fromTime = dateFilterFrom ? new Date(dateFilterFrom).setHours(0,0,0,0) : -Infinity;
+        const toTime = dateFilterTo ? new Date(dateFilterTo).setHours(23,59,59,999) : Infinity;
+        filtered = filtered.filter(g => (g.createdAt || 0) >= fromTime && (g.createdAt || 0) <= toTime);
+    }
+    filtered.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+    groupGrid.innerHTML = '';
+    if (filtered.length === 0) {
+        groupGrid.innerHTML = `<div class="empty-msg">${keyword || dateFilterFrom || dateFilterTo ? '🔍 Không tìm thấy nhóm nào phù hợp.' : '📭 Không có nhóm sản phẩm nào.'}</div>`;
+        totalGroupsSpan.textContent = `📦 ${groups.length} nhóm`;
+        totalImagesSpan.textContent = `🖼 ${groups.reduce((s, g) => s + (g.images ? g.images.length : 0), 0)} ảnh`;
+        calcStorageSize();
+        return;
+    }
+
+    let totalImgCount = 0;
+    filtered.forEach((group, idx) => {
+        totalImgCount += group.images ? group.images.length : 0;
+        const realIdx = groups.indexOf(group);
+        const dateStr = new Date(group.createdAt || Date.now()).toLocaleString('vi-VN');
+        const card = document.createElement('div');
+        card.className = 'group-card';
+        let imagesHtml = '';
+        if (!group.images || group.images.length === 0) {
+            imagesHtml = '<div style="color:#94a3b8; padding:8px 0;">Không có ảnh</div>';
+        } else {
+            imagesHtml = '<div class="image-grid">';
+            group.images.forEach((img, imgIdx) => {
+                const src = getImageSrc(img);
+                imagesHtml += `
+                    <div class="img-wrap" data-group-idx="${realIdx}" data-img-idx="${imgIdx}">
+                        <img src="${src}" alt="${group.productCode}" loading="lazy" onerror="this.src='https://placehold.co/200x200/1e293b/bfa15f?text=${encodeURIComponent(img.name || '?')}'">
+                        <button class="img-del" data-group-idx="${realIdx}" data-img-idx="${imgIdx}">✕</button>
+                    </div>
+                `;
+            });
+            imagesHtml += '</div>';
+        }
+        card.innerHTML = `
+            <div class="group-header">
+                <span class="group-code">${group.productCode}</span>
+                <span class="group-type">${group.type}</span>
+                <span class="group-count">${group.images ? group.images.length : 0} ảnh</span>
+            </div>
+            <div class="group-body">
+                ${imagesHtml}
+                <div class="group-actions">
+                    <button class="btn btn-blue btn-sm upload-to-group-btn" data-group-idx="${realIdx}">📤 Thêm ảnh</button>
+                    <button class="btn btn-danger btn-sm del-group-btn" data-group-idx="${realIdx}">🗑 Xóa nhóm</button>
+                    <button class="btn btn-orange btn-sm copy-code-btn" data-code="${group.productCode}">📋 Copy mã</button>
+                </div>
+                <div style="margin-top:6px; font-size:11px; color:#94a3b8;">📅 ${dateStr}</div>
+            </div>
+        `;
+        groupGrid.appendChild(card);
+    });
+
+    // Event listeners
+    document.querySelectorAll('.img-wrap').forEach(wrap => {
+        wrap.addEventListener('click', function(e) {
+            if (e.target.classList.contains('img-del')) return;
+            const gIdx = parseInt(this.getAttribute('data-group-idx'));
+            const iIdx = parseInt(this.getAttribute('data-img-idx'));
+            if (!isNaN(gIdx) && !isNaN(iIdx)) openLightbox(gIdx, iIdx);
+        });
+    });
+
+    document.querySelectorAll('.img-del').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const gIdx = parseInt(this.getAttribute('data-group-idx'));
+            const iIdx = parseInt(this.getAttribute('data-img-idx'));
+            if (gIdx >= 0 && gIdx < groups.length && iIdx >= 0 && iIdx < (groups[gIdx].images || []).length) {
+                const code = groups[gIdx].productCode;
+                if (confirm(`Xóa ảnh "${groups[gIdx].images[iIdx].name || iIdx}" khỏi nhóm ${code}?`)) {
+                    groups[gIdx].images.splice(iIdx, 1);
+                    if (groups[gIdx].images.length === 0) groups.splice(gIdx, 1);
+                    saveCurrentUserData();
+                    renderGroups(searchBox.value);
+                }
+            }
+        });
+    });
+
+    document.querySelectorAll('.del-group-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const gIdx = parseInt(this.getAttribute('data-group-idx'));
+            if (gIdx >= 0 && gIdx < groups.length) {
+                if (confirm(`Xóa nhóm "${groups[gIdx].productCode}" (${groups[gIdx].images ? groups[gIdx].images.length : 0} ảnh)?`)) {
+                    groups.splice(gIdx, 1);
+                    saveCurrentUserData();
+                    renderGroups(searchBox.value);
+                }
+            }
+        });
+    });
+
+    document.querySelectorAll('.upload-to-group-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const gIdx = parseInt(this.getAttribute('data-group-idx'));
+            if (gIdx >= 0 && gIdx < groups.length) {
+                const tempInput = document.createElement('input');
+                tempInput.type = 'file';
+                tempInput.multiple = true;
+                tempInput.accept = 'image/*';
+                tempInput.style.display = 'none';
+                document.body.appendChild(tempInput);
+                tempInput.click();
+                tempInput.onchange = function(e) {
+                    if (this.files && this.files.length > 0) handleFilesToGroup(this.files, gIdx);
+                    this.remove();
+                };
+            }
+        });
+    });
+
+    document.querySelectorAll('.copy-code-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const code = this.getAttribute('data-code');
+            navigator.clipboard.writeText(code).then(() => alert(`✅ Đã copy mã "${code}"`))
+                .catch(() => {
+                    const ta = document.createElement('textarea');
+                    ta.value = code;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    ta.remove();
+                    alert(`✅ Đã copy mã "${code}"`);
+                });
+        });
+    });
+
+    totalGroupsSpan.textContent = `📦 ${groups.length} nhóm (hiển thị ${filtered.length})`;
+    totalImagesSpan.textContent = `🖼 ${totalImgCount} ảnh`;
+    calcStorageSize();
+}
+
+function getImageSrc(img) {
+    if (img && img.data) return img.data;
+    if (img && img.name) return `./images/${img.name}`;
+    return 'https://placehold.co/200x200/1e293b/bfa15f?text=❌';
+}
+
+function calcStorageSize() {
+    let total = 0;
+    groups.forEach(g => {
+        if (g.images) g.images.forEach(img => { if (img.data) total += img.data.length; });
+    });
+    storageSizeSpan.textContent = `💾 ${(total/(1024*1024)).toFixed(2)} MB`;
+}
+
+// =====================================================================
+// XỬ LÝ UPLOAD FILE
+// =====================================================================
+function handleFilesToGroup(files, groupIdx = null) {
+    if (!files || files.length === 0) return;
+    let targetGroupIdx = groupIdx;
+    let targetCode = '';
+    if (targetGroupIdx === null || targetGroupIdx === undefined) {
+        const type = folderSelect.value;
+        let code = productCodeInput.value.trim();
+        if (!code) { alert('⚠ Vui lòng nhập mã sản phẩm!'); return; }
+        let prefix = 'V';
+        if (type === 'Áo') prefix = 'A';
+        else if (type === 'Set váy') prefix = 'SV';
+        else if (type === 'Set đồ') prefix = 'S';
+        else if (type === 'Chân váy') prefix = 'CV';
+        else if (type === 'Sơ mi') prefix = 'SM';
+        targetCode = (prefix + code).toUpperCase();
+        let existing = groups.find(g => g.productCode === targetCode);
+        if (!existing) {
+            existing = { productCode: targetCode, type: type, images: [], createdAt: Date.now() };
+            groups.push(existing);
+        }
+        targetGroupIdx = groups.indexOf(existing);
+    } else {
+        targetCode = groups[targetGroupIdx].productCode;
+    }
+    const readerPromises = [];
+    Array.from(files).forEach((file, idx) => {
+        readerPromises.push(new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const ext = file.name.split('.').pop() || 'png';
+                resolve({ name: `${targetCode}_${Date.now()}_${idx}.${ext}`, data: e.target.result });
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        }));
+    });
+    Promise.all(readerPromises).then(results => {
+        if (!groups[targetGroupIdx].images) groups[targetGroupIdx].images = [];
+        results.forEach(imgData => groups[targetGroupIdx].images.push(imgData));
+        saveCurrentUserData();
+        renderGroups(searchBox.value);
+        alert(`✅ Đã thêm ${results.length} ảnh vào nhóm "${targetCode}"`);
+        previewContainer.innerHTML = '';
+    }).catch(err => alert('❌ Lỗi đọc file: ' + err.message));
+}
+
+// =====================================================================
+// ZOOM & PAN (tối ưu hiệu năng)
+// =====================================================================
+let currentZoom = 1, minZoom = 0.15, maxZoom = 5.0;
+let panX = 0, panY = 0;
+let isPanning = false;
+let panStartX = 0, panStartY = 0, panStartPanX = 0, panStartPanY = 0;
+let imgNaturalWidth = 0, imgNaturalHeight = 0;
+
+function getImageNaturalSize() {
+    if (lightboxImg.naturalWidth && lightboxImg.naturalHeight) {
+        imgNaturalWidth = lightboxImg.naturalWidth;
+        imgNaturalHeight = lightboxImg.naturalHeight;
+        return true;
+    }
+    return false;
+}
+
+function getPanBounds() {
+    const rect = lightboxContainer.getBoundingClientRect();
+    const dw = imgNaturalWidth * currentZoom, dh = imgNaturalHeight * currentZoom;
+    return { maxPanX: Math.max(0, (dw - rect.width) / 2), maxPanY: Math.max(0, (dh - rect.height) / 2) };
+}
+
+function applyTransform() {
+    lightboxImg.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
+}
+
+function updateZoomDisplay() {
+    zoomLevelSpan.textContent = Math.round(currentZoom * 100) + '%';
+}
+
+function clampPan() {
+    if (currentZoom <= 1) { panX = 0; panY = 0; applyTransform(); updateZoomDisplay(); return; }
+    if (!getImageNaturalSize()) return;
+    const b = getPanBounds();
+    panX = Math.min(Math.max(panX, -b.maxPanX), b.maxPanX);
+    panY = Math.min(Math.max(panY, -b.maxPanY), b.maxPanY);
+    applyTransform();
+}
+
+function resetZoom() {
+    currentZoom = 1; panX = 0; panY = 0;
+    applyTransform();
+    updateZoomDisplay();
+}
+
+function zoomToPoint(factor, cx, cy) {
+    const rect = lightboxContainer.getBoundingClientRect();
+    const dx = cx - rect.left - rect.width / 2;
+    const dy = cy - rect.top - rect.height / 2;
+    const newZoom = Math.min(Math.max(currentZoom * factor, minZoom), maxZoom);
+    if (newZoom === currentZoom) return;
+    const scale = newZoom / currentZoom;
+    panX = (panX + dx) * scale - dx;
+    panY = (panY + dy) * scale - dy;
+    currentZoom = newZoom;
+    if (currentZoom <= 1) { panX = 0; panY = 0; } else { clampPan(); }
+    applyTransform();
+    updateZoomDisplay();
+}
+
+function zoomIn() {
+    const rect = lightboxContainer.getBoundingClientRect();
+    zoomToPoint(1.2, rect.left + rect.width/2, rect.top + rect.height/2);
+}
+function zoomOut() {
+    const rect = lightboxContainer.getBoundingClientRect();
+    zoomToPoint(1/1.2, rect.left + rect.width/2, rect.top + rect.height/2);
+}
+
+function zoomFit() {
+    if (!lightboxImg.complete || !lightboxImg.naturalWidth) {
+        lightboxImg.onload = function() { zoomFit(); };
+        return;
+    }
+    getImageNaturalSize();
+    const rect = lightboxContainer.getBoundingClientRect();
+    if (imgNaturalWidth === 0 || imgNaturalHeight === 0) { resetZoom(); return; }
+    const f = Math.min(rect.width / imgNaturalWidth, rect.height / imgNaturalHeight, 1.0);
+    currentZoom = Math.max(f, minZoom);
+    panX = 0; panY = 0;
+    applyTransform();
+    updateZoomDisplay();
+}
+
+function initPan(e) {
+    if (currentZoom <= 1) return;
+    isPanning = true;
+    const c = e.clientX !== undefined ? e : (e.touches ? e.touches[0] : null);
+    if (!c) return;
+    panStartX = c.clientX;
+    panStartY = c.clientY;
+    panStartPanX = panX;
+    panStartPanY = panY;
+    lightboxContainer.style.cursor = 'grabbing';
+    if (e.preventDefault) e.preventDefault();
+}
+
+function movePan(e) {
+    if (!isPanning) return;
+    const c = e.clientX !== undefined ? e : (e.touches ? e.touches[0] : null);
+    if (!c) return;
+    panX = panStartPanX + (c.clientX - panStartX);
+    panY = panStartPanY + (c.clientY - panStartY);
+    clampPan();
+    applyTransform();
+    if (e.preventDefault) e.preventDefault();
+}
+
+function endPan() {
+    if (isPanning) { isPanning = false; lightboxContainer.style.cursor = 'grab'; }
+}
+
+// =====================================================================
+// LIGHTBOX
+// =====================================================================
+function openLightbox(groupIdx, imgIdx) {
+    const group = groups[groupIdx];
+    if (!group || !group.images || group.images.length === 0) return;
+    currentLightboxGroupIdx = groupIdx;
+    currentLightboxImageIdx = imgIdx;
+    renderLightboxImage(imgIdx);
+    lightbox.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function renderLightboxImage(idx) {
+    const group = groups[currentLightboxGroupIdx];
+    if (!group) return;
+    const img = group.images[idx];
+    if (!img) return;
+    resetZoom();
+    const src = getImageSrc(img);
+    lightboxImg.src = src;
+    lightboxName.textContent = `📄 ${img.name || 'Không tên'}`;
+    if (img.data) {
+        const bytes = img.data.length;
+        const kb = (bytes / 1024).toFixed(1);
+        const mb = (bytes / (1024*1024)).toFixed(2);
+        lightboxSize.textContent = mb >= 1 ? `${mb} MB` : `${kb} KB`;
+    } else {
+        lightboxSize.textContent = '🔗 Tên file';
+    }
+    lightboxDownload.onclick = function() {
+        downloadImage(src, img.name || `image_${idx}.png`);
+    };
+    lightboxPrev.style.display = idx > 0 ? 'flex' : 'none';
+    lightboxNext.style.display = idx < group.images.length - 1 ? 'flex' : 'none';
+    lightboxImg.onload = function() { getImageNaturalSize(); zoomFit(); };
+    if (lightboxImg.complete && lightboxImg.naturalWidth > 0) { getImageNaturalSize(); zoomFit(); }
+}
+
+function closeLightbox() {
+    lightbox.classList.remove('active');
+    document.body.style.overflow = '';
+}
+function prevImage() {
+    if (currentLightboxImageIdx > 0) {
+        renderLightboxImage(currentLightboxImageIdx - 1);
+        currentLightboxImageIdx--;
+    }
+}
+function nextImage() {
+    const group = groups[currentLightboxGroupIdx];
+    if (group && currentLightboxImageIdx < group.images.length - 1) {
+        renderLightboxImage(currentLightboxImageIdx + 1);
+        currentLightboxImageIdx++;
+    }
+}
+
+function downloadImage(src, filename) {
+    if (src.startsWith('data:image')) {
+        const link = document.createElement('a');
+        link.href = src;
+        link.download = filename || 'image.png';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        return;
+    }
+    fetch(src).then(res => {
+        if (!res.ok) throw new Error('Không tải được ảnh');
+        return res.blob();
+    }).then(blob => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename || 'image.png';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    }).catch(() => {
+        window.open(src, '_blank');
+    });
+}
+
+// =====================================================================
+// SỰ KIỆN
+// =====================================================================
+uploadBtn.addEventListener('click', function(e) { e.preventDefault(); fileInput.click(); });
+fileInput.addEventListener('change', function(e) {
+    if (this.files && this.files.length > 0) {
+        previewContainer.innerHTML = '';
+        Array.from(this.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const img = document.createElement('img');
+                img.className = 'preview-thumb';
+                img.src = ev.target.result;
+                previewContainer.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        });
+        handleFilesToGroup(this.files, null);
+    }
+    this.value = '';
+});
+
+addImagesBtn.addEventListener('click', function() {
+    const type = folderSelect.value;
+    let code = productCodeInput.value.trim();
+    const rawImages = imageListInput.value.trim();
+    if (!code) { alert('⚠ Vui lòng nhập mã sản phẩm!'); return; }
+    if (!rawImages) { alert('⚠ Vui lòng nhập tên file!'); return; }
+    let prefix = 'V';
+    if (type === 'Áo') prefix = 'A';
+    else if (type === 'Set váy') prefix = 'SV';
+    else if (type === 'Set đồ') prefix = 'S';
+    else if (type === 'Chân váy') prefix = 'CV';
+    else if (type === 'Sơ mi') prefix = 'SM';
+    const fullCode = (prefix + code).toUpperCase();
+    const imageNames = rawImages.split(/[,\n]+/).map(s => s.trim()).filter(s => s.length > 0);
+    if (imageNames.length === 0) { alert('⚠ Không tìm thấy tên file!'); return; }
+    let existingGroup = groups.find(g => g.productCode === fullCode);
+    if (existingGroup) {
+        if (!existingGroup.images) existingGroup.images = [];
+        let added = 0;
+        imageNames.forEach(name => {
+            if (!existingGroup.images.some(img => img.name === name)) {
+                existingGroup.images.push({ name, data: null });
+                added++;
+            }
+        });
+        alert(`✅ Đã thêm ${added} ảnh vào nhóm "${fullCode}"`);
+    } else {
+        groups.push({ productCode: fullCode, type, images: imageNames.map(name => ({ name, data: null })), createdAt: Date.now() });
+        alert(`✅ Đã tạo nhóm "${fullCode}" với ${imageNames.length} ảnh`);
+    }
+    productCodeInput.value = '';
+    imageListInput.value = '';
+    productCodeInput.focus();
+    saveCurrentUserData();
+    renderGroups(searchBox.value);
+});
+
+function applyDateFilter() {
+    dateFilterFrom = dateFrom.value || null;
+    dateFilterTo = dateTo.value || null;
+    if (dateFilterFrom || dateFilterTo) {
+        let range = '';
+        if (dateFilterFrom && dateFilterTo) range = `${dateFilterFrom} → ${dateFilterTo}`;
+        else if (dateFilterFrom) range = `từ ${dateFilterFrom}`;
+        else if (dateFilterTo) range = `đến ${dateFilterTo}`;
+        filterDateRange.textContent = range;
+        filterStatus.style.display = 'block';
+    } else {
+        filterStatus.style.display = 'none';
+    }
+    renderGroups(searchBox.value);
+}
+function clearDateFilter() {
+    dateFrom.value = '';
+    dateTo.value = '';
+    dateFilterFrom = null;
+    dateFilterTo = null;
+    filterStatus.style.display = 'none';
+    renderGroups(searchBox.value);
+}
+applyDateFilterBtn.addEventListener('click', applyDateFilter);
+clearDateFilterBtn.addEventListener('click', clearDateFilter);
+searchBox.addEventListener('input', function() { renderGroups(this.value); });
+
+loadJsonBtn.addEventListener('click', function() {
+    const raw = jsonTextarea.value.trim();
+    if (!raw) { alert('⚠ Textarea trống!'); return; }
+    try {
+        let parsed = JSON.parse(raw);
+        parsed = migrateLegacyData(parsed);
+        if (!parsed.users || !parsed.userData) {
+            throw new Error('Dữ liệu không đúng cấu trúc!');
+        }
+        // Kiểm tra admin tồn tại
+        if (!parsed.users[ADMIN_USERNAME]) {
+            parsed.users[ADMIN_USERNAME] = { password: ADMIN_PASSWORD, createdAt: Date.now(), isAdmin: true };
+        }
+        appData.users = parsed.users;
+        appData.userData = parsed.userData;
+        if (currentUser && appData.userData[currentUser.username]) {
+            groups = appData.userData[currentUser.username];
+        }
+        saveAppData(true);
+        renderGroups(searchBox.value);
+        alert(`✅ Đã khôi phục thành công!`);
+    } catch(e) {
+        alert(`❌ Lỗi JSON: ${e.message}`);
+    }
+});
+
+exportJsonBtn.addEventListener('click', function() {
+    const data = { users: getUsers(), userData: appData.userData };
+    const json = JSON.stringify(data, null, 2);
+    navigator.clipboard.writeText(json).then(() => alert('✅ Đã copy JSON!'))
+        .catch(() => { jsonTextarea.select(); document.execCommand('copy'); alert('✅ Đã copy JSON!'); });
+});
+exportJsonFileBtn.addEventListener('click', function() {
+    const data = { users: getUsers(), userData: appData.userData };
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `fashion_backup_${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+});
+
+clearAllBtn.addEventListener('click', function() {
+    if (groups.length === 0) { alert('Kho đã trống.'); return; }
+    if (confirm(`⚠ Xóa toàn bộ ${groups.length} nhóm (${groups.reduce((s,g) => s + (g.images ? g.images.length : 0), 0)} ảnh)?`)) {
+        groups = [];
+        saveCurrentUserData();
+        renderGroups(searchBox.value);
+    }
+});
+
+clearStorageBtn.addEventListener('click', function() {
+    if (confirm('🧹 Dọn cache ảnh (xóa base64, giữ lại tên file)?')) {
+        let cleared = 0;
+        groups.forEach(g => {
+            if (g.images) g.images.forEach(img => {
+                if (img.data && img.data.length > 1000) { img.data = null; cleared++; }
+            });
+        });
+        saveCurrentUserData();
+        renderGroups(searchBox.value);
+        alert(`✅ Đã dọn ${cleared} ảnh cache.`);
+    }
+});
+
+// =====================================================================
+// LIGHTBOX SỰ KIỆN
+// =====================================================================
+lightboxClose.addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', function(e) { if (e.target === this) closeLightbox(); });
+lightboxPrev.addEventListener('click', prevImage);
+lightboxNext.addEventListener('click', nextImage);
+zoomInBtn.addEventListener('click', zoomIn);
+zoomOutBtn.addEventListener('click', zoomOut);
+zoomResetBtn.addEventListener('click', resetZoom);
+zoomFitBtn.addEventListener('click', zoomFit);
+
+lightboxContainer.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = this.getBoundingClientRect();
+    const factor = e.deltaY > 0 ? 0.9 : 1.1;
+    const newZoom = Math.min(Math.max(currentZoom * factor, minZoom), maxZoom);
+    if (newZoom === currentZoom) return;
+    const scale = newZoom / currentZoom;
+    const dx = e.clientX - rect.left - rect.width / 2;
+    const dy = e.clientY - rect.top - rect.height / 2;
+    panX = (panX + dx) * scale - dx;
+    panY = (panY + dy) * scale - dy;
+    currentZoom = newZoom;
+    if (currentZoom <= 1) { panX = 0; panY = 0; } else { clampPan(); }
+    applyTransform();
+    updateZoomDisplay();
+}, { passive: false });
+
+lightboxContainer.addEventListener('mousedown', function(e) { if (e.button === 0) initPan(e); });
+document.addEventListener('mousemove', movePan);
+document.addEventListener('mouseup', endPan);
+lightboxContainer.addEventListener('touchstart', function(e) { if (e.touches.length === 1) initPan(e); }, { passive: true });
+lightboxContainer.addEventListener('touchmove', function(e) { if (e.touches.length === 1) movePan(e); }, { passive: false });
+lightboxContainer.addEventListener('touchend', endPan, { passive: true });
+lightboxContainer.addEventListener('touchcancel', endPan, { passive: true });
+
+let lastPinchDist = 0, pinchStartZoom = 1;
+lightboxContainer.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 2) {
+        const t1 = e.touches[0], t2 = e.touches[1];
+        lastPinchDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+        pinchStartZoom = currentZoom;
+        isPanning = false;
+    }
+}, { passive: true });
+lightboxContainer.addEventListener('touchmove', function(e) {
+    if (e.touches.length === 2) {
+        e.preventDefault();
+        const t1 = e.touches[0], t2 = e.touches[1];
+        const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+        const factor = dist / lastPinchDist;
+        const newZoom = Math.min(Math.max(pinchStartZoom * factor, minZoom), maxZoom);
+        if (newZoom !== currentZoom) {
+            const rect = this.getBoundingClientRect();
+            const cx = (t1.clientX + t2.clientX) / 2;
+            const cy = (t1.clientY + t2.clientY) / 2;
+            const scale = newZoom / currentZoom;
+            const dx = cx - rect.left - rect.width / 2;
+            const dy = cy - rect.top - rect.height / 2;
+            panX = (panX + dx) * scale - dx;
+            panY = (panY + dy) * scale - dy;
+            currentZoom = newZoom;
+            if (currentZoom <= 1) { panX = 0; panY = 0; } else { clampPan(); }
+            applyTransform();
+            updateZoomDisplay();
+        }
+    }
+}, { passive: false });
+
+document.addEventListener('keydown', function(e) {
+    if (!lightbox.classList.contains('active')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') prevImage();
+    if (e.key === 'ArrowRight') nextImage();
+    if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomIn(); }
+    if (e.key === '-' || e.key === '_') { e.preventDefault(); zoomOut(); }
+    if (e.key === '0') { e.preventDefault(); resetZoom(); }
+    if (e.key === 'f' || e.key === 'F') { e.preventDefault(); zoomFit(); }
+});
+
+// =====================================================================
+// AUTH SỰ KIỆN
+// =====================================================================
+authOpenBtn.addEventListener('click', function() {
+    if (currentUser) {
+        if (confirm('Bạn đã đăng nhập. Muốn đăng xuất?')) {
+            logoutUser();
+            location.reload();
+        }
+        return;
+    }
+    showAuthModal();
+});
+closeAuthBtn.addEventListener('click', hideAuthModal);
+authModal.addEventListener('click', function(e) { if (e.target === this) hideAuthModal(); });
+authSubmitBtn.addEventListener('click', handleAuthSubmit);
+authPassword.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleAuthSubmit(); });
+authUsername.addEventListener('keydown', function(e) { if (e.key === 'Enter') authPassword.focus(); });
+emailLoginBtn.addEventListener('click', emailLogin);
+
+adminPanelBtn.addEventListener('click', function() {
+    if (adminPanel.classList.contains('active')) {
+        adminPanel.classList.remove('active');
+        closeAdminUserData();
+    } else {
+        adminPanel.classList.add('active');
+        renderAdminPanel();
+    }
+});
+document.getElementById('refreshAdminBtn').addEventListener('click', function() {
+    renderAdminPanel();
+    alert('✅ Đã làm mới!');
+});
+document.getElementById('closeAdminUserDataBtn').addEventListener('click', closeAdminUserData);
+
+// =====================================================================
+// KHỞI TẠO
+// =====================================================================
+document.addEventListener('DOMContentLoaded', function() {
+    initAppData();
+    updateAuthUI();
+    loadUserSession();
+});
+</script>
+</body>
+</html>
